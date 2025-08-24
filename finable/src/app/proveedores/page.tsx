@@ -16,21 +16,42 @@ export default function ProveedoresPage() {
     const tel = searchParams.get("telefono");
     if (tel) {
       setTelefono(tel);
-      const createSessionAsync = async () => {
-        const session = await createSession(tel);
-        Cookies.set("session", session, {
-          secure: true, // only sent over https
-          sameSite: "strict",
-          expires: 7, // 7 days
-        });
-        // Save cookie securely (works client-side only, httpOnly requires server-side)
-        Cookies.set("telefono", tel, {
-          secure: true, // only sent over https
-          sameSite: "strict",
-          expires: 7, // 7 days
-        });
+      
+      const validateAndCreateSession = async () => {
+        try {
+          // Check if session exists and validate it
+          const validateResponse = await fetch("/api/session/validate", {
+            method: "GET",
+            credentials: "include" // Include cookies in request
+          });
+
+          if (!validateResponse.ok) {
+            // Session invalid or doesn't exist - create new one
+            const session = await createSession(tel);
+            Cookies.set("telefono", tel, {
+              secure: true,
+              sameSite: "strict", 
+              expires: 7
+            });
+          } else {
+            // Session is valid
+            const data = await validateResponse.json();
+            if (data.data.telefono !== tel) {
+              // Phone number mismatch - create new session
+              const session = await createSession(tel);
+              Cookies.set("telefono", tel, {
+                secure: true,
+                sameSite: "strict",
+                expires: 7
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Error validating/creating session:", error);
+        }
       };
-      createSessionAsync();
+
+      validateAndCreateSession();
     }
   }, [searchParams]);
 
