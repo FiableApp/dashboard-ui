@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI!;
+
+// ✅ Only include valid Gmail scopes here
 const SCOPES = [
-  "https://www.googleapis.com/auth/gmail.readonly",
-  "https://www.googleapis.com/auth/userinfo.email",
-  "offline_access"
+  "https://www.googleapis.com/auth/gmail.settings.basic",
+  "https://www.googleapis.com/auth/gmail.settings.sharing",
+  "https://www.googleapis.com/auth/userinfo.email" // useful to identify the account
 ].join(" ");
 
 export async function GET() {
@@ -14,8 +16,10 @@ export async function GET() {
   url.searchParams.set("redirect_uri", GOOGLE_REDIRECT_URI);
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", SCOPES);
-  url.searchParams.set("access_type", "offline"); // important for refresh token
-  url.searchParams.set("prompt", "consent"); // ensures refresh token is returned
+
+  // ✅ These are not scopes, but query params!
+  url.searchParams.set("access_type", "offline"); // ask for refresh token
+  url.searchParams.set("prompt", "consent");      // force consent screen → ensures refresh token
 
   return NextResponse.redirect(url.toString());
 }

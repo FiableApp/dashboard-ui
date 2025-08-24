@@ -23,7 +23,7 @@ export default function SettingsPage() {
 
       {/* Connected Accounts */}
       <div className="space-y-2">
-        {accounts.map((acc, idx) => (
+        {accounts && accounts.map((acc, idx) => (
           <div
             key={idx}
             className="flex items-center justify-between rounded-xl border p-3 shadow"
@@ -43,7 +43,7 @@ export default function SettingsPage() {
           </div>
         ))}
 
-        {accounts.length === 0 && <p>No accounts connected yet.</p>}
+        {!accounts  && <p>No accounts connected yet.</p>}
       </div>
 
       {/* Connect Buttons */}
