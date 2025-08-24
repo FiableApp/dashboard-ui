@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI!;
+import { supabaseServer } from "@/lib/supabaseServer";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -30,15 +31,55 @@ export async function GET(req: Request) {
   });
   const profile = await profileRes.json();
 
-  // 3. Save in DB (pseudo code)
-  // await db.accounts.insert({
-  //   userId: currentUserId,   // from your session/JWT
-  //   provider: "google",
-  //   email: profile.email,
-  //   accessToken: tokens.access_token,
-  //   refreshToken: tokens.refresh_token,
-  //   expiresAt: Date.now() + tokens.expires_in * 1000,
-  // });
+  const userId = 3;
+  // 3. Check if user exists and save in DB
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID not found' }, { status: 400 });
+  }
+
+  const { data: existingUser } = await supabaseServer
+    .from('proveedores')
+    .select()
+    .eq('userId', userId)
+    .eq('provider', 'google')
+    .single();
+
+  if (existingUser) {
+    // Update existing provider connection
+    const { error } = await supabaseServer
+      .from('proveedores')
+      .update({
+        email: profile.email,
+        accessToken: tokens.access_token,
+        refreshToken: tokens.refresh_token,
+        expiresAt: new Date(Date.now() + tokens.expires_in * 1000)
+      })
+      .eq('userId', userId)
+      .eq('provider', 'google');
+
+    if (error) {
+      console.error('Error updating database:', error);
+      return NextResponse.json({ error: 'Failed to update connection' }, { status: 500 });
+    }
+  } else {
+    // Insert new provider connection
+    const { error } = await supabaseServer
+      .from('proveedores')
+      .insert({
+        userId: userId,
+        provider: 'google',
+        email: profile.email,
+        accessToken: tokens.access_token,
+        refreshToken: tokens.refresh_token,
+        expiresAt: new Date(Date.now() + tokens.expires_in * 1000)
+      });
+
+    if (error) {
+      console.error('Error saving to database:', error);
+      return NextResponse.json({ error: 'Failed to save connection' }, { status: 500 });
+    }
+  }
 
   return NextResponse.json({ connected: true, email: profile.email });
 }
+

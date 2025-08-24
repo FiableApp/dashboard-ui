@@ -5,9 +5,7 @@ const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI!;
 
 // ✅ Only include valid Gmail scopes here
 const SCOPES = [
-  "https://www.googleapis.com/auth/gmail.settings.basic",
-  "https://www.googleapis.com/auth/gmail.settings.sharing",
-  "https://www.googleapis.com/auth/userinfo.email" // useful to identify the account
+  "https://mail.google.com" // useful to identify the account
 ].join(" ");
 
 export async function GET() {

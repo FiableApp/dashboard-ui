@@ -1,10 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 type Account = {
   provider: string;
   email: string;
+};
+
+// Helper function to get provider icon
+const getProviderIcon = (provider: string) => {
+  const providerLower = provider.toLowerCase();
+  if (providerLower.includes('google') || providerLower.includes('gmail')) {
+    return '/GoogleLogo.webp';
+  }
+  if (providerLower.includes('microsoft') || providerLower.includes('outlook')) {
+    return '/microsoft.svg';
+  }
+  return null;
 };
 
 export default function SettingsPage() {
@@ -23,43 +38,71 @@ export default function SettingsPage() {
 
       {/* Connected Accounts */}
       <div className="space-y-2">
-        {accounts && accounts.map((acc, idx) => (
-          <div
-            key={idx}
-            className="flex items-center justify-between rounded-xl border p-3 shadow"
-          >
-            <span>
-              <b>{acc.provider}</b>: {acc.email}
-            </span>
-            <button
-              className="text-red-600 hover:underline"
-              onClick={() => {
-                fetch(`/api/accounts/${acc.provider}/disconnect`, { method: "DELETE" })
-                  .then(() => setAccounts(prev => prev.filter(a => a.email !== acc.email)));
-              }}
+        {accounts && accounts.map((acc, idx) => {
+          const iconSrc = getProviderIcon(acc.provider);
+          return (
+            <div
+              key={idx}
+              className="flex items-center justify-between rounded-xl border p-3 shadow"
             >
-              Disconnect
-            </button>
-          </div>
-        ))}
+              <div className="flex items-center gap-3">
+                {iconSrc && (
+                  <Image
+                    src={iconSrc}
+                    alt={`${acc.provider} icon`}
+                    width={24}
+                    height={24}
+                    className="w-6 h-6"
+                  />
+                )}
+                <span>
+                  <b>{acc.provider}</b>: {acc.email}
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={() => {
+                  fetch(`/api/accounts/${acc.provider}/disconnect`, { method: "DELETE" })
+                    .then(() => setAccounts(prev => prev.filter(a => a.email !== acc.email)));
+                }}
+              >
+                Disconnect
+              </Button>
+            </div>
+          );
+        })}
 
-        {!accounts  && <p>No accounts connected yet.</p>}
+        {!accounts && <p>No accounts connected yet.</p>}
       </div>
 
       {/* Connect Buttons */}
       <div className="flex gap-4">
-        <a
-          href="/api/oauth/google"
-          className="rounded-lg bg-red-500 px-4 py-2 text-white shadow hover:bg-red-600"
-        >
-          Connect Gmail
-        </a>
-        <a
-          href="/api/oauth/microsoft"
-          className="rounded-lg bg-blue-600 px-4 py-2 text-white shadow hover:bg-blue-700"
-        >
-          Connect Outlook
-        </a>
+        <Button asChild className="bg-red-500 hover:bg-red-600 text-white">
+          <Link href="/api/oauth/google">
+            <Image
+              src="/GoogleLogo.webp"
+              alt="Google icon"
+              width={20}
+              height={20}
+              className="w-5 h-5"
+            />
+            Connect Gmail
+          </Link>
+        </Button>
+        <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Link href="/api/oauth/microsoft">
+            <Image
+              src="/microsoft.svg"
+              alt="Microsoft icon"
+              width={20}
+              height={20}
+              className="w-5 h-5"
+            />
+            Connect Outlook
+          </Link>
+        </Button>
       </div>
     </div>
   );
