@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
 export async function GET() {
-  const { data, error } = await supabaseServer.from("users").select("*");
+  const { data, error } = await supabaseServer.from("Usuarios").select("*");
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
